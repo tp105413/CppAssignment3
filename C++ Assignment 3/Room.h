@@ -15,7 +15,7 @@ public:
 
 	int GetWidth() const;
 	int GetHeight() const;
-	bool IsInsideRoom(int w, int h) const;
+	bool IsInsideRoom(int x, int y) const;
 	void Display(const std::vector<const Entity*>& entities) const;
 
 	int GetDoorX() const;

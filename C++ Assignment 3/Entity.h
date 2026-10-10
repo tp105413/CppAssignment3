@@ -8,7 +8,7 @@ protected:
 	char symbol;
 
 public:
-	Entity(int x, int y, int hp, char sysmbol);
+	Entity(int x, int y, int hp, char symbol);
 	virtual ~Entity() = default;
 
 	int GetX() const;

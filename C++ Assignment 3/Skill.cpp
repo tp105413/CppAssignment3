@@ -4,15 +4,21 @@
 #include "Enemy.h"
 #include "Player.h"
 #include "Room.h"
+#include "GameManager.h"
 
-Skill::Skill(const std::string& n, int cd) {
+Skill::Skill(const std::string& n, const std::string& d, int cd) {
 	name = n;
+	description = d;
 	cooldown = cd;
 	currentCooldown = 0;
 }
 
 const std::string& Skill::GetName() const {
 	return name;
+}
+
+const std::string& Skill::GetDescription() const {
+	return description;
 }
 
 int Skill::GetCurrentCooldown() const {
@@ -34,7 +40,7 @@ void Skill::Tick() {
 }
 
 // Spin Slash Skill
-SpinSkill::SpinSkill():Skill("Spin Slash", 2){}
+SpinSkill::SpinSkill():Skill("Spin Slash", "Deal 20dmg to surrounding enemies", 2) {}
 
 bool SpinSkill::Use(Player& player, EnemyList& enemies, const Room&) {
 	for (auto& e : enemies) {
@@ -42,13 +48,14 @@ bool SpinSkill::Use(Player& player, EnemyList& enemies, const Room&) {
 		int dy = e->GetY() - player.GetY();
 		if (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1) {
 			e->TakeDamage(20);
+			GameManager::GetInstance().AddMessage("Spin Slash hits " + e->GetName() + " for 20 damage!");
 		}
 	}
 	return true;
 }
 
 // Dash Skill
-DashSkill::DashSkill():Skill("Dash", 3){}
+DashSkill::DashSkill():Skill("Dash", "Dash 3 hexes, deals 30dmg to enemies", 3) {}
 
 bool DashSkill::Use(Player& player, EnemyList& enemies, const Room& room) {
 	std::cout << "Dash direction (w/a/s/d): ";
@@ -75,6 +82,7 @@ bool DashSkill::Use(Player& player, EnemyList& enemies, const Room& room) {
 		for (auto& e : enemies) {
 			if (e->IsAlive() && e->GetX() == nextX && e->GetY() == nextY) {
 				e->TakeDamage(30);
+				GameManager::GetInstance().AddMessage("Dash hits " + e->GetName() + " for 30 damage!");
 				if (e->IsAlive()) blocked = true;
 			}
 		}

@@ -6,6 +6,10 @@ class Undead : public Enemy {
 public:
 	Undead(int x, int y) : Enemy(x, y, 30, 'U') {}
 
+	std::string GetName() const override {
+		return "Undead";
+	}
+
 	int GetDamage() const override {
 		return 10;
 	}
@@ -23,6 +27,10 @@ class UndeadBoss : public Enemy {
 public:
 	UndeadBoss(int x, int y) : Enemy(x,y, 100, 'B'){}
 	
+	std::string GetName() const override {
+		return "Undead Boss";
+	}
+
 	int GetDamage() const override {
 		return 20;
 	}

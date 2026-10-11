@@ -19,5 +19,6 @@ public:
 
 	void Move(int dX, int dY);
 	void TakeDamage(int amount);
+	void Heal(int amount);
 	void SetPosition(int newX, int newY);
 };

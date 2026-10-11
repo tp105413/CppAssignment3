@@ -1,9 +1,11 @@
 #include <iostream>
 #include <cstdlib>
+#include <string>
 
 #include "Enemy.h"
 #include "Player.h"
 #include "Room.h"
+#include "GameManager.h"
 
 Enemy::Enemy(int x, int y, int hp, char symbol) : Entity(x, y, hp, symbol), state(EnemyState::Wander) {}
 
@@ -33,7 +35,7 @@ void Enemy::TakeTurn(Player& player, const Room& room, const EnemyList& enemies)
 		break;
 	case EnemyState::Attack:
 		player.TakeDamage(GetDamage());
-		std::cout << symbol << " hits you for " << GetDamage() << " damage!\n";
+		GameManager::GetInstance().AddMessage(GetName() + " hits you for " + std::to_string(GetDamage()) + " damage!");
 		break;
 	}
 }

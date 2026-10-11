@@ -39,6 +39,10 @@ void Entity::TakeDamage(int amount) {
 	}
 }
 
+void Entity::Heal(int amount) {
+	hp += amount;
+}
+
 void Entity::SetPosition(int newX, int newY) {
 	x = newX;
 	y = newY;

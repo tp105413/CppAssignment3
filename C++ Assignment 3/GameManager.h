@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "Room.h"
 #include "Player.h"
 #include "Enemy.h"
@@ -14,6 +17,8 @@ private:
 
 	GameManager();
 	void SetupLevel(int newLevel);
+
+	std::vector<std::string> messages;
 
 public:
 	static GameManager& GetInstance();
@@ -35,4 +40,8 @@ public:
 	Enemy* FindEnemyAt(int x, int y);
 	void RemoveDeadEnemies();
 	void EnemiesTakeTurn();
+
+	void AddMessage(const std::string& message);
+	void ClearMessages();
+	const std::vector<std::string>& GetMessages() const;
 };

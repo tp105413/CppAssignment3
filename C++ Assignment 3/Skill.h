@@ -11,14 +11,16 @@ class Room;
 class Skill {
 protected:
 	std::string name;
+	std::string description;
 	int cooldown;
 	int currentCooldown;
 
 public:
-	Skill(const std::string& n, int cd);
+	Skill(const std::string& n, const std::string& d, int cd);
 	virtual ~Skill() = default;
 
 	const std::string& GetName() const;
+	const std::string& GetDescription() const;
 	int GetCurrentCooldown() const;
 	bool IsReady() const;
 	void StartCooldown();

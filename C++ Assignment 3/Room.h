@@ -9,9 +9,10 @@ private:
 	int width;
 	int height;
 	char doorSymbol;
+	int doorX;
 
 public:
-	Room(int w, int h, char d = 'D');
+	Room(int w, int h, char d = 'D', int dX = -1);
 
 	int GetWidth() const;
 	int GetHeight() const;

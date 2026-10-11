@@ -2,10 +2,11 @@
 
 #include "Room.h"
 
-Room::Room(int w, int h, char d) {
+Room::Room(int w, int h, char d, int dX) {
 	width = w;
 	height = h;
 	doorSymbol = d;
+	doorX = (dX >= 0 && dX < w) ? dX : w / 2;
 }
 
 int Room::GetWidth() const {
@@ -33,12 +34,12 @@ void Room::Display(const std::vector<const Entity*>& entities) const {
 			}
 			std::cout << tile;
 		}
-		std::cout << '\n';
+		std::cout << "\n\t\t";
 	}
 }
 
 int Room::GetDoorX() const{
-	return width / 2;
+	return doorX;
 }
 
 int Room::GetDoorY() const{

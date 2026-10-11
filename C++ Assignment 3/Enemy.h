@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "Entity.h"
 
@@ -30,6 +31,7 @@ public:
 
 	void TakeTurn(Player& player, const Room& room, const EnemyList& enemies);
 
+	virtual std::string GetName() const = 0;
 	virtual int GetDamage() const = 0;
 	virtual int GetAttackRange() const = 0;
 	virtual int GetDetectRange() const = 0;

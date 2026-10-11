@@ -24,6 +24,7 @@ namespace {
 
 	const int minEnemies = 1;
 	const int maxEnemies = 3;
+	const int healAmount = 10;
 }
 
 GameManager::GameManager() : level(1), turnsLeft(0), room(7, 5) {}
@@ -48,11 +49,19 @@ void GameManager::SetupLevel(int newLevel) {
 	const LevelData& data = levels[level - 1];
 
 	enemies.clear();
-	room = Room(data.width, data.height, data.isBoss ? 'X' : 'D');
+
+	// Randomise the door position
+	int doorX = std::rand() % data.width;
+	room = Room(data.width, data.height, 'D', doorX);
 	turnsLeft = data.turnLimit;
 
 	if (data.isBoss) {
-		enemies.push_back(EnemyFactory::Create("boss", room.GetWidth() / 2 - 2, 0));
+		int bossX = room.GetWidth() / 2 - 2;
+
+		if (bossX == room.GetDoorX()) {
+			bossX = room.GetWidth() / 2 + 2;
+		}
+		enemies.push_back(EnemyFactory::Create("boss", bossX, 0));
 	}
 	else {
 		int count = minEnemies + std::rand() % (maxEnemies - minEnemies + 1);
@@ -113,6 +122,14 @@ Enemy* GameManager::FindEnemyAt(int x, int y) {
 }
 
 void GameManager::RemoveDeadEnemies() {
+
+	for (const auto& e : enemies) {
+		if (!e->IsAlive()) {
+			player->Heal(healAmount);
+			AddMessage(e->GetName() + " defeated! +" + std::to_string(healAmount) + " HP");
+		}
+	}
+
 	enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
 		[](const std::unique_ptr<Enemy>& e) { return !e->IsAlive(); }), enemies.end());
 }
@@ -121,4 +138,16 @@ void GameManager::EnemiesTakeTurn() {
 	for (auto& e : enemies) {
 		e->TakeTurn(*player, room, enemies);
 	}
+}
+
+void GameManager::AddMessage(const std::string& message) {
+	messages.push_back(message);
+}
+
+void GameManager::ClearMessages() {
+	messages.clear();
+}
+
+const std::vector<std::string>& GameManager::GetMessages() const {
+	return messages;
 }

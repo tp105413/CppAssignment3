@@ -20,6 +20,7 @@ bool Room::IsInsideRoom(int x, int y) const {
 	return x >= 0 && x < width && y >= 0 && y < height;
 }
 
+// Display room in grid
 void Room::Display(const std::vector<const Entity*>& entities) const {
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {

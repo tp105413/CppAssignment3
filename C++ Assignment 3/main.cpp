@@ -1,108 +1,54 @@
 #include <iostream>
 #include <vector>
-#include <memory>
 #include <cstdlib>
 #include <ctime>
-#include <algorithm>
 
-#include "Room.h"
-#include "Player.h"
-#include "Enemy.h"
-#include "EnemyFactory.h"
+#include "GameManager.h"
 
-const int ROOMS_BEFORE_BOSS = 3;
-
-void SetupRoom(int roomNumber, Room& room, Player& player, EnemyList& enemies)
-{
-	enemies.clear();
-
-	if (roomNumber <= ROOMS_BEFORE_BOSS) {
-		int widths[] = { 7, 9, 11 };
-		int heights[] = { 5, 5, 6 };
-		int width = widths[roomNumber - 1];
-		int height = heights[roomNumber - 1];
-		room = Room(width, height, 'D');
-
-		int count = 1 + std::rand() % 2;    // 1 to 2 enemies
-		while ((int)enemies.size() < count) {
-			int x = std::rand() % width;
-			if (x == room.GetDoorX()) continue;
-
-			bool taken = false;
-			for (const auto& e : enemies) {
-				if (e->GetX() == x) taken = true;
-			}
-			if (taken) continue;
-
-			enemies.push_back(EnemyFactory::Create("undead", x, 0));
-		}
-	}
-	else {
-		room = Room(11, 6, 'X');            // boss room
-		enemies.push_back(EnemyFactory::Create("boss", room.GetWidth() / 2 - 2, 0));
-	}
-
-	player.SetPosition(room.GetWidth() / 2, room.GetHeight() - 1);
-}
-
-Enemy* FindEnemyAt(EnemyList& enemies, int x, int y)
-{
-	for (auto& e : enemies) {
-		if (e->IsAlive() && e->GetX() == x && e->GetY() == y) return e.get();
-	}
-	return nullptr;
-}
-
-void RemoveDeadEnemies(EnemyList& enemies)
-{
-	enemies.erase(
-		std::remove_if(enemies.begin(), enemies.end(),
-			[](const std::unique_ptr<Enemy>& e) { return !e->IsAlive(); }),
-		enemies.end());
-}
+using namespace std;
 
 void ShowStatus(Player& player, const EnemyList& enemies)
 {
-	std::cout << "HP: " << player.GetHp() << "\n";
+	cout << "HP: " << player.GetHp() << "\n";
 	for (int i = 0; i < player.GetSkillCount(); i++) {
 		Skill& s = player.GetSkill(i);
-		std::cout << "[" << i + 1 << "] " << s.GetName() << ": ";
-		if (s.IsReady()) std::cout << "READY";
-		else std::cout << "cooldown " << s.GetCurrentCooldown();
-		std::cout << "   ";
+		cout << "[" << i + 1 << "] " << s.GetName() << ": ";
+		if (s.IsReady()) cout << "READY";
+		else cout << "cooldown " << s.GetCurrentCooldown();
+		cout << "   ";
 	}
-	std::cout << "\n";
+	cout << "\n";
 	for (const auto& e : enemies) {
-		std::cout << e->GetSymbol() << " (" << e->GetX() << "," << e->GetY()
+		cout << e->GetSymbol() << " (" << e->GetX() << "," << e->GetY()
 			<< ") HP " << e->GetHp() << "\n";
 	}
 }
 
-int main()
+void StartGame()
 {
-	std::srand((unsigned)std::time(nullptr));
-
-	int roomNumber = 1;
-	Room room(7, 5);
-	Player player(0, 0);
-	EnemyList enemies;
-	SetupRoom(roomNumber, room, player, enemies);
+	GameManager& gm = GameManager::GetInstance();
+	gm.StartNewGame();
 
 	bool running = true;
 	while (running)
 	{
-		std::vector<const Entity*> entities = { &player };
+		Player& player = gm.GetPlayer();
+		Room& room = gm.GetRoom();
+		EnemyList& enemies = gm.GetEnemies();
+
+		vector<const Entity*> entities = { &player };
 		for (const auto& e : enemies) entities.push_back(e.get());
 
-		std::cout << "\nRoom " << roomNumber << "\n";
+		cout << "\nLevel " << gm.GetLevel() << "/" << gm.GetLevelCount()
+			<< "   Turns left: " << gm.GetTurnsLeft() << "\n";
 		room.Display(entities);
 		ShowStatus(player, enemies);
-		std::cout << "w/a/s/d = move or attack, 1/2 = skills, q = quit: ";
+		cout << "w/a/s/d = move or attack, 1/2 = skills, q = quit: ";
 
 		char input;
-		std::cin >> input;
+		cin >> input;
 
-		bool turnUsed = false;   // did the player really do something?
+		bool turnUsed = false;
 
 		if (input == 'q') {
 			running = false;
@@ -110,7 +56,7 @@ int main()
 		else if (input == '1' || input == '2') {
 			Skill& skill = player.GetSkill(input - '1');
 			if (!skill.IsReady()) {
-				std::cout << "Skill is on cooldown!\n";
+				cout << "Skill is on cooldown!\n";
 			}
 			else if (skill.Use(player, enemies, room)) {
 				skill.StartCooldown();
@@ -128,10 +74,10 @@ int main()
 				int targetX = player.GetX() + dx;
 				int targetY = player.GetY() + dy;
 
-				Enemy* target = FindEnemyAt(enemies, targetX, targetY);
+				Enemy* target = gm.FindEnemyAt(targetX, targetY);
 				if (target) {
-					target->TakeDamage(10);               // basic attack
-					std::cout << "Basic attack! 10 damage.\n";
+					target->TakeDamage(10);
+					cout << "Basic attack! 10 damage.\n";
 					turnUsed = true;
 				}
 				else if (room.IsInsideRoom(targetX, targetY)) {
@@ -142,31 +88,58 @@ int main()
 		}
 
 		if (turnUsed) {
-			RemoveDeadEnemies(enemies);
+			gm.RemoveDeadEnemies();
 			player.TickSkills();
+			gm.UseTurn();
 
 			if (room.IsDoor(player.GetX(), player.GetY())) {
-				if (roomNumber > ROOMS_BEFORE_BOSS) {
-					std::cout << "You cleared the dungeon!\n";
+				if (gm.IsLastLevel()) {
+					cout << "You escaped the dungeon! Congratulations!\n";
 					running = false;
 				}
 				else {
-					roomNumber++;
-					SetupRoom(roomNumber, room, player, enemies);
+					gm.NextLevel();
 				}
 			}
+			else if (gm.GetTurnsLeft() <= 0) {
+				cout << "You ran out of turns and were buried beneath the dungeon, lost to darkness forever...\n";
+				running = false;
+			}
 			else {
-				// enemies act after the player
-				for (auto& e : enemies) {
-					e->TakeTurn(player, room, enemies);
-				}
+				gm.EnemiesTakeTurn();
 				if (!player.IsAlive()) {
-					std::cout << "You died...\n";
+					cout << "You died in the dungeon, no longer to see the light of day again...\n";
 					running = false;
 				}
 			}
 		}
 	}
+
+	cout << "\nPress Enter to return to the menu...";
+	cin.ignore(1000, '\n');
+	cin.get();
+}
+
+int main() {
+	srand((unsigned)time(nullptr));
+
+	int choice;
+
+	do {
+		system("cls");
+		cout << "1. Start Game\n";
+		cout << "2. Quit\n\n";
+		cout << "Choose: ";
+		cin >> choice;
+		cin.ignore(1000, '\n');
+
+		if (choice == 1) {
+			system("cls");
+			StartGame();
+		}
+	} while (choice != 2);
+
+	exit(0);
 
 	return 0;
 }
